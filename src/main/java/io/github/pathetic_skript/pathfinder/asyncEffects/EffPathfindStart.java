@@ -31,10 +31,11 @@ public class EffPathfindStart extends AsyncEffect {
 
     public static void register(Registration reg) {
         reg.newEffect(EffPathfindStart.class,
-                        "start calculating path from %location% to %location% with id %string%")
+                        "start [calculating] path[finding] from %location% to %location% with id %string%")
                 .name("Pathfinder - Start Async Pathfinder")
                 .description("Start the async pathfinder, use ExprAsyncPathfind to retrieve values of this operation. Does NOT block the main server thread")
-                .examples("set {_nodes::*} to path from location(0, 0, 0) to location(5, 5, 5)")
+                .examples("start pathfinding from location(0, 0, 0) to location(5, 5, 5) with id \"example\"" +
+                        "set {_nodes::*} to calculated path \"example\"")
                 .since("1.0.0")
                 .register();
     }

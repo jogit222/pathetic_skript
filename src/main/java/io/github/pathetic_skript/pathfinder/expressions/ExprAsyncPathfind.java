@@ -20,8 +20,9 @@ public class ExprAsyncPathfind extends SimpleExpression<Location> {
         reg.newSimpleExpression(ExprAsyncPathfind.class, Location.class,
                         "calculated path %string%")
                 .name("Pathfinder - Get Path Async")
-                .description("Get a path from a location to a location async. Does NOT block the main server thread. In most cases use this over the non async vesion.")
-                .examples("set {_nodes::*} to path from location(0, 0, 0) to location(5, 5, 5)")
+                .description("Get a path from a location to a location async, requires start pathfinding from ... to be ran first. Will return nothing if not used first. Does NOT block the main server thread. In most cases use this over the non async vesion.")
+                .examples("start pathfinding from location(0, 0, 0) to location(5, 5, 5) with id \"example\"" +
+                        "set {_nodes::*} to calculated path \"example\"")
                 .since("1.0.0")
                 .register();
     }
