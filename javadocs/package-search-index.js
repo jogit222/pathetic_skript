@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"io.github.pathetic_skript"},{"l":"io.github.pathetic_skript.pathfinder.asyncEffects"},{"l":"io.github.pathetic_skript.pathfinder.expressions"}];updateSearchResults();
