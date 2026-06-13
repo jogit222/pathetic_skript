@@ -1,7 +1,0 @@
-name: pathetic_skript
-version: '${version}'
-
-main: io.github.pathetic_skript.Pathetic_skript
-paperPluginLoader: io.github.pathetic_skript.Pathetic_skriptLoader
-api-version: '1.21.11'
-load: POSTWORLD
