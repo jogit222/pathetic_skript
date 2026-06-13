@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
         Get a path from an id, id must be used in the 'start pathfinding from %location% to %location%'
         """)
 @Example("""
-        start pathfinding from location(0, 0, 0) to location(5, 5, 5) with id \"example\" +
+        start pathfinding from location(0, 0, 0) to location(5, 5, 5) with id \"example\" 
         set {_nodes::*} to calculated path \"example\"
         """)
 @Since("1.0.0")
