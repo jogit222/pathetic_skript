@@ -11,9 +11,22 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.lang.Expression;
 import ch.njol.util.Kleenean;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.doc.*;
 
 import javax.annotation.Nullable;
 
+
+// doc stuff
+@Name("Pathfinder - Get Path Async")
+@Description("""
+        Get a path from an id, id must be used in the 'start pathfinding from %location% to %location%'
+        """)
+@Example("""
+        start pathfinding from location(0, 0, 0) to location(5, 5, 5) with id \"example\" +
+        set {_nodes::*} to calculated path \"example\"
+        """)
+@Since("1.0.0")
+@Keywords({"Pathfinding", "Pathfinder", "A*"})
 public class ExprAsyncPathfind extends SimpleExpression<Location> {
 
     public static void register(Registration reg) {

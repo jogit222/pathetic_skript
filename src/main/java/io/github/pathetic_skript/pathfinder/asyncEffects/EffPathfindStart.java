@@ -4,6 +4,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
 import ch.njol.skript.util.AsyncEffect;
 import ch.njol.util.Kleenean;
+import ch.njol.skript.doc.*;
 
 import com.github.shanebeee.skr.Registration;
 
@@ -25,6 +26,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// doc stuff
+@Name("Pathfinder - Start Async Pathfinder")
+@Description("""
+        Start the async pathfinder, use ExprAsyncPathfind to retrieve values of this operation. Does NOT block the main server thread
+        """)
+@Example("""
+        start pathfinding from location(0, 0, 0) to location(5, 5, 5) with id \"example\" +
+        set {_nodes::*} to calculated path \"example\"
+        """)
+@Since("1.0.0")
+@Keywords({"Pathfinding", "Pathfinder", "A*"})
 public class EffPathfindStart extends AsyncEffect {
 
     public static Map<String, Location[]> pathCache = new HashMap<>();

@@ -1,10 +1,12 @@
 package io.github.pathetic_skript.pathfinder.expressions;
 
+import ch.njol.skript.doc.*;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.lang.Expression;
 import ch.njol.util.Kleenean;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.doc.*;
 
 import com.github.shanebeee.skr.Registration;
 
@@ -27,6 +29,17 @@ import de.bsommerfeld.pathetic.bukkit.provider.LoadingNavigationPointProvider;
 import de.bsommerfeld.pathetic.engine.factory.AStarPathfinderFactory;
 
 import javax.annotation.Nullable;
+
+// doc stuff
+@Name("Pathfinder - Get Path")
+@Description("""
+        Get a path from a location to a location. Blocks the main server thread.
+        """)
+@Example("""
+        set {_nodes::*} to path from location(0, 0, 0) to location(5, 5, 5)
+        """)
+@Since("1.0.0")
+@Keywords({"Pathfinding", "Pathfinder", "A*"})
 
 public class ExprPathfind extends SimpleExpression<Location> {
     public static void register(Registration reg) {
