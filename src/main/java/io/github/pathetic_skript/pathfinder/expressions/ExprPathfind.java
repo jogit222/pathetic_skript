@@ -22,7 +22,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.event.Event;
 
-import java.nio.file.Path;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -65,7 +65,7 @@ public class ExprPathfind extends SimpleExpression<Location> {
             if (ExprAllowedBlocks.allowedBlocks.size() == 0) {
                 config = PathfinderConfiguration.builder()
                         .provider(new LoadingNavigationPointProvider())
-                        .async(true)
+                        .async(false)
                         .maxIterations(100_000_000)
                         .neighborStrategy(NeighborStrategies.DIAGONAL_3D)
                         .build();
@@ -73,7 +73,7 @@ public class ExprPathfind extends SimpleExpression<Location> {
             } else {
                 config = PathfinderConfiguration.builder()
                         .provider(new LoadingNavigationPointProvider())
-                        .async(true)
+                        .async(false)
                         .maxIterations(100_000_000)
                         .neighborStrategy(NeighborStrategies.DIAGONAL_3D)
                         .validationProcessors((ExprAllowedBlocks.allowedBlocks.size() > 0) ? List.of(new CustomValidationProcessor()) : null)
@@ -88,7 +88,7 @@ public class ExprPathfind extends SimpleExpression<Location> {
             assert this.loc1 != null;
             Location startPosBukkit = this.loc1.getSingle(event);
             World world = startPosBukkit.getWorld();
-            logger.info("World" + world.toString());
+            logger.info("World " + world.toString());
             Location targetPosBukkit = this.loc2.getSingle(event);
             PathPosition startPos = new PathPosition(startPosBukkit.getBlockX(), startPosBukkit.getBlockY(), startPosBukkit.getBlockZ());
             PathPosition targetPos = new PathPosition(targetPosBukkit.getBlockX(), targetPosBukkit.getBlockY(), targetPosBukkit.getBlockZ());
@@ -97,7 +97,7 @@ public class ExprPathfind extends SimpleExpression<Location> {
 
                         // We have an usable result since it either found the path, or fallen back.
                         result.getPath().forEach(position -> {
-                            Location location = BukkitMapper.toLocation(position, world);
+                            Location location = BukkitMapper.toLocation(position, world).add(0.5, 0, 0.5);
                             // Do something with it.
                             nodes.add(location);
                         });
@@ -109,7 +109,7 @@ public class ExprPathfind extends SimpleExpression<Location> {
                     }).exceptionally(ex -> System.err.println("An exception occurred -> " + ex));
             array = nodes.toArray(new Location[0]);}
         catch (Exception e) {
-            System.err.println("An exception occurred in ExprPathFind: get(Event event)" + e.getMessage());
+            Bukkit.getLogger().severe("An exception occurred in ExprPathFind: get(Event event)" + e.getMessage());
             array = new Location[0];
         }
         finally {

@@ -3,7 +3,6 @@ package io.github.pathetic_skript.pathfinder.expressions;
 import ch.njol.skript.aliases.ItemType;
 import ch.njol.skript.classes.Changer;
 import ch.njol.skript.doc.*;
-import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.lang.Expression;
 import ch.njol.util.Kleenean;
@@ -12,26 +11,14 @@ import ch.njol.skript.doc.*;
 
 import com.github.shanebeee.skr.Registration;
 
-import de.bsommerfeld.pathetic.api.wrapper.PathPosition;
-import de.bsommerfeld.pathetic.bukkit.context.BukkitEnvironmentContext;
-import de.bsommerfeld.pathetic.bukkit.mapper.BukkitMapper;
-
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.material.*;
-import org.bukkit.World;
 import org.bukkit.event.Event;
 
-import java.nio.file.Path;
-import java.util.List;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
-
-import de.bsommerfeld.pathetic.api.factory.PathfinderFactory;
-import de.bsommerfeld.pathetic.api.pathing.Pathfinder;
-import de.bsommerfeld.pathetic.api.pathing.configuration.PathfinderConfiguration;
-import de.bsommerfeld.pathetic.bukkit.provider.LoadingNavigationPointProvider;
-import de.bsommerfeld.pathetic.engine.factory.AStarPathfinderFactory;
-
 import javax.annotation.Nullable;
 
 public class ExprAllowedBlocks extends SimpleExpression<Material> {
