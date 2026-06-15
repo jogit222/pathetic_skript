@@ -9,6 +9,7 @@ import ch.njol.skript.doc.*;
 import com.github.shanebeee.skr.Registration;
 
 import de.bsommerfeld.pathetic.api.factory.PathfinderFactory;
+import de.bsommerfeld.pathetic.api.pathing.NeighborStrategies;
 import de.bsommerfeld.pathetic.api.pathing.configuration.PathfinderConfiguration;
 import de.bsommerfeld.pathetic.api.wrapper.PathPosition;
 import de.bsommerfeld.pathetic.bukkit.context.BukkitEnvironmentContext;
@@ -16,6 +17,8 @@ import de.bsommerfeld.pathetic.bukkit.mapper.BukkitMapper;
 import de.bsommerfeld.pathetic.bukkit.provider.LoadingNavigationPointProvider;
 import de.bsommerfeld.pathetic.engine.factory.AStarPathfinderFactory;
 
+import io.github.pathetic_skript.pathfinder.expressions.ExprAllowedBlocks;
+import io.github.pathetic_skript.pathfinder.util.validationProcessor.CustomValidationProcessor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.event.Event;
@@ -26,17 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// doc stuff
-@Name("Pathfinder - Start Async Pathfinder")
-@Description("""
-        Start the async pathfinder, use ExprAsyncPathfind to retrieve values of this operation. Does NOT block the main server thread
-        """)
-@Example("""
-        start pathfinding from location(0, 0, 0) to location(5, 5, 5) with id \"example\" 
-        set {_nodes::*} to calculated path \"example\"
-        """)
-@Since("1.0.0")
-@Keywords({"Pathfinding", "Pathfinder", "A*"})
 public class EffPathfindStart extends AsyncEffect {
 
     public static Map<String, Location[]> pathCache = new HashMap<>();
@@ -45,8 +37,8 @@ public class EffPathfindStart extends AsyncEffect {
         reg.newEffect(EffPathfindStart.class,
                         "start [calculating] path[finding] from %location% to %location% with id %string%")
                 .name("Pathfinder - Start Async Pathfinder")
-                .description("Start the async pathfinder, use ExprAsyncPathfind to retrieve values of this operation. Does NOT block the main server thread")
-                .examples("start pathfinding from location(0, 0, 0) to location(5, 5, 5) with id \"example\"" +
+                .description("Start the async pathfinder, use calculated path %string% to retrieve values of this operation. Does NOT block the main server thread")
+                .examples("start pathfinding from location(0, 0, 0) to location(5, 5, 5) with id \"example\"",
                         "set {_nodes::*} to calculated path \"example\"")
                 .since("1.0.0")
                 .register();
@@ -67,19 +59,31 @@ public class EffPathfindStart extends AsyncEffect {
     protected void execute(Event event) {
         Location startBukkit  = loc1.getSingle(event);
         Location targetBukkit = loc2.getSingle(event);
-        World world           = startBukkit.getWorld();
+        World world           = loc1.getSingle(event).getWorld();
         String cacheKey       = id.getSingle(event);
 
         PathPosition startPos  = new PathPosition(startBukkit.getBlockX(), startBukkit.getBlockY(), startBukkit.getBlockZ());
         PathPosition targetPos = new PathPosition(targetBukkit.getBlockX(), targetBukkit.getBlockY(), targetBukkit.getBlockZ());
 
         PathfinderFactory factory = new AStarPathfinderFactory();
-        PathfinderConfiguration config = PathfinderConfiguration.builder()
-                .provider(new LoadingNavigationPointProvider())
-                .async(true)
-                .maxIterations(100_000_000)
-                .build();
+        PathfinderConfiguration config;
+        if (ExprAllowedBlocks.allowedBlocks.size() == 0) {
+            config = PathfinderConfiguration.builder()
+                    .provider(new LoadingNavigationPointProvider())
+                    .async(true)
+                    .maxIterations(100_000_000)
+                    .neighborStrategy(NeighborStrategies.DIAGONAL_3D)
+                    .build();
 
+        } else {
+            config = PathfinderConfiguration.builder()
+                    .provider(new LoadingNavigationPointProvider())
+                    .async(true)
+                    .maxIterations(100_000_000)
+                    .neighborStrategy(NeighborStrategies.DIAGONAL_3D)
+                    .validationProcessors((ExprAllowedBlocks.allowedBlocks.size() > 0) ? List.of(new CustomValidationProcessor()) : null)
+                    .build();
+        }
         try {
             factory.createPathfinder(config)
                     .findPath(startPos, targetPos, new BukkitEnvironmentContext(world))
