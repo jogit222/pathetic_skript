@@ -26,7 +26,7 @@ public class ExprAllowedBlocks extends SimpleExpression<Material> {
         reg.newSimpleExpression(ExprAllowedBlocks.class, Material.class,
                         "allowed block[s]")
                 .name("Pathfinder - Add/Remove Block For Valid Node")
-                .description("Adds/Removes a block for valid nodes.")
+                .description("Adds/Removes a block for valid nodes. Default is nothing (so you have to set this else you cant pathfind)")
                 .examples("add stone to allowed blocks")
                 .since("1.0.1")
                 .register();
