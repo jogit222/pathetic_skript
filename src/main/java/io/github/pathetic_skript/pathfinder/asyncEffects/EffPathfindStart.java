@@ -18,18 +18,21 @@ import de.bsommerfeld.pathetic.bukkit.provider.LoadingNavigationPointProvider;
 import de.bsommerfeld.pathetic.engine.factory.AStarPathfinderFactory;
 
 import io.github.pathetic_skript.pathfinder.expressions.ExprAllowedBlocks;
+import io.github.pathetic_skript.pathfinder.expressions.ExprNeighborStrategies;
 import io.github.pathetic_skript.pathfinder.expressions.ExprPathCacheSize;
 import io.github.pathetic_skript.pathfinder.expressions.ExprMaxConcurrentPathfinds;
+import io.github.pathetic_skript.pathfinder.util.CustomNeighborStrategies.CustomNeighborStrategies;
 import io.github.pathetic_skript.pathfinder.util.validationProcessor.CustomValidationProcessor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.event.Event;
+import org.bukkit.util.Vector;
 
+import java.util.Collections;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.Semaphore;
-import java.util.Collections;
 
 public class EffPathfindStart extends AsyncEffect {
 
@@ -98,7 +101,7 @@ public class EffPathfindStart extends AsyncEffect {
                     .provider(new LoadingNavigationPointProvider())
                     .async(true)
                     .maxIterations(100_000_000)
-                    .neighborStrategy(NeighborStrategies.DIAGONAL_3D)
+                    .neighborStrategy((ExprNeighborStrategies.neighborMoves.isEmpty()) ? NeighborStrategies.DIAGONAL_3D : new CustomNeighborStrategies())
                     .build();
 
         } else {
@@ -106,7 +109,7 @@ public class EffPathfindStart extends AsyncEffect {
                     .provider(new LoadingNavigationPointProvider())
                     .async(true)
                     .maxIterations(100_000_000)
-                    .neighborStrategy(NeighborStrategies.DIAGONAL_3D)
+                    .neighborStrategy((ExprNeighborStrategies.neighborMoves.isEmpty()) ? NeighborStrategies.DIAGONAL_3D : new CustomNeighborStrategies())
                     .validationProcessors(List.of(new CustomValidationProcessor()))
                     .build();
         }
@@ -115,7 +118,7 @@ public class EffPathfindStart extends AsyncEffect {
                     .findPath(startPos, targetPos, new BukkitEnvironmentContext(world))
                     .ifPresent(result -> {
                         List<Location> nodes = new ArrayList<>();
-                        result.getPath().forEach(pos -> nodes.add(BukkitMapper.toLocation(pos, world)));
+                        result.getPath().forEach(pos -> nodes.add(BukkitMapper.toLocation(pos, world).add(new Vector(0.5, 0, 0.5))));
                         pathCache.put(cacheKey, nodes.toArray(new Location[0]));
                     })
                     .exceptionally(ex -> System.err.println("Pathfinding failed: " + ex.getMessage()));

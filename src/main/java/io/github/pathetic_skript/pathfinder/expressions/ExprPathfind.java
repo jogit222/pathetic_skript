@@ -1,12 +1,10 @@
 package io.github.pathetic_skript.pathfinder.expressions;
 
 import ch.njol.skript.doc.*;
-import ch.njol.skript.lang.SkriptParser;
 import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.lang.Expression;
 import ch.njol.util.Kleenean;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.doc.*;
 
 import com.github.shanebeee.skr.Registration;
 
@@ -15,8 +13,8 @@ import de.bsommerfeld.pathetic.api.wrapper.PathPosition;
 import de.bsommerfeld.pathetic.bukkit.context.BukkitEnvironmentContext;
 import de.bsommerfeld.pathetic.bukkit.mapper.BukkitMapper;
 
+import io.github.pathetic_skript.pathfinder.util.CustomNeighborStrategies.CustomNeighborStrategies;
 import io.github.pathetic_skript.pathfinder.util.validationProcessor.CustomValidationProcessor;
-import org.apache.commons.lang3.ObjectUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -33,7 +31,6 @@ import de.bsommerfeld.pathetic.api.pathing.configuration.PathfinderConfiguration
 import de.bsommerfeld.pathetic.bukkit.provider.LoadingNavigationPointProvider;
 import de.bsommerfeld.pathetic.engine.factory.AStarPathfinderFactory;
 
-import javax.annotation.Nullable;
 
 public class ExprPathfind extends SimpleExpression<Location> {
     public static void register(Registration reg) {
@@ -45,7 +42,6 @@ public class ExprPathfind extends SimpleExpression<Location> {
                 .since("1.0.0")
                 .register();
     }
-    @Nullable
 
     private Expression<Location> loc1;
     private Expression<Location> loc2;
@@ -64,12 +60,12 @@ public class ExprPathfind extends SimpleExpression<Location> {
 
             // Configure the pathfinder
             PathfinderConfiguration config;
-            if (ExprAllowedBlocks.allowedBlocks.size() == 0) {
+            if (ExprAllowedBlocks.allowedBlocks.isEmpty()) {
                 config = PathfinderConfiguration.builder()
                         .provider(new LoadingNavigationPointProvider())
                         .async(false)
                         .maxIterations(100_000_000)
-                        .neighborStrategy(NeighborStrategies.DIAGONAL_3D)
+                        .neighborStrategy((ExprNeighborStrategies.neighborMoves.isEmpty()) ? NeighborStrategies.DIAGONAL_3D : new CustomNeighborStrategies())
                         .build();
 
             } else {
@@ -77,7 +73,7 @@ public class ExprPathfind extends SimpleExpression<Location> {
                         .provider(new LoadingNavigationPointProvider())
                         .async(false)
                         .maxIterations(100_000_000)
-                        .neighborStrategy(NeighborStrategies.DIAGONAL_3D)
+                        .neighborStrategy((ExprNeighborStrategies.neighborMoves.isEmpty()) ? NeighborStrategies.DIAGONAL_3D : new CustomNeighborStrategies())
                         .validationProcessors((ExprAllowedBlocks.allowedBlocks.size() > 0) ? List.of(new CustomValidationProcessor()) : null)
                         .build();
             }
@@ -86,15 +82,13 @@ public class ExprPathfind extends SimpleExpression<Location> {
             // Create the pathfinder instance
             Pathfinder pathfinder = factory.createPathfinder(config);
             List<Location> nodes = new ArrayList<>();
-            Pathfinder pf = pathfinder;
             assert this.loc1 != null;
             Location startPosBukkit = this.loc1.getSingle(event);
             World world = startPosBukkit.getWorld();
-            logger.info("World " + world.toString());
             Location targetPosBukkit = this.loc2.getSingle(event);
             PathPosition startPos = new PathPosition(startPosBukkit.getBlockX(), startPosBukkit.getBlockY(), startPosBukkit.getBlockZ());
             PathPosition targetPos = new PathPosition(targetPosBukkit.getBlockX(), targetPosBukkit.getBlockY(), targetPosBukkit.getBlockZ());
-            pf.findPath(startPos, targetPos, new BukkitEnvironmentContext(world))
+            pathfinder.findPath(startPos, targetPos, new BukkitEnvironmentContext(world))
                     .ifPresent(result -> {
 
                         // We have an usable result since it either found the path, or fallen back.
@@ -109,12 +103,11 @@ public class ExprPathfind extends SimpleExpression<Location> {
                         System.out.println("No path found between start and target positions.");
 
                     }).exceptionally(ex -> System.err.println("An exception occurred -> " + ex));
-            array = nodes.toArray(new Location[0]);}
-        catch (Exception e) {
+            array = nodes.toArray(new Location[0]);
+        } catch (Exception e) {
             Bukkit.getLogger().severe("An exception occurred in ExprPathFind: get(Event event)" + e.getMessage());
             array = new Location[0];
-        }
-        finally {
+        } finally {
             return array;
         }
     }
@@ -122,9 +115,13 @@ public class ExprPathfind extends SimpleExpression<Location> {
     public boolean isSingle() {
         return false;
     }
+
+    @Override
     public Class  getReturnType() {
         return Location.class;
     }
+
+    @Override
     public String toString(Event e, boolean b) {
         return "path from " + this.loc1.toString(e,b) + " to " + this.loc2.toString(e,b);
     }

@@ -1,6 +1,5 @@
 package io.github.pathetic_skript.pathfinder.expressions;
 
-import ch.njol.skript.aliases.ItemType;
 import ch.njol.skript.classes.Changer;
 import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
@@ -8,7 +7,6 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.util.Kleenean;
 import com.github.shanebeee.skr.Registration;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,7 +20,9 @@ public class ExprPathCacheSize extends SimpleExpression<Integer> {
                 .since("1.1.1")
                 .register();
     }
+
     public static Integer maxPathCacheSize;
+
     @Override
     @Nullable
     protected Integer[] get(Event event) {

@@ -7,17 +7,13 @@ import ch.njol.skript.lang.util.SimpleExpression;
 import ch.njol.skript.lang.Expression;
 import ch.njol.util.Kleenean;
 import ch.njol.skript.lang.SkriptParser.ParseResult;
-import ch.njol.skript.doc.*;
 
 import com.github.shanebeee.skr.Registration;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.material.*;
 import org.bukkit.event.Event;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import javax.annotation.Nullable;
 
@@ -48,8 +44,6 @@ public class ExprAllowedBlocks extends SimpleExpression<Material> {
 
     @Override
     public Material[] get(Event event) {
-        ArrayList<Material> materials = new ArrayList<>();
-
         return allowedBlocks.toArray(new Material[0]);
     }
     @Override
@@ -61,10 +55,10 @@ public class ExprAllowedBlocks extends SimpleExpression<Material> {
             }
             switch (mode)  {
                 case ADD -> {
-                    allowedBlocks.add((Material) ((((ItemType) obj).getMaterial())));
+                    allowedBlocks.add(((ItemType) obj).getMaterial());
                 }
                 case REMOVE -> {
-                    allowedBlocks.remove((Material) ((((ItemType) obj).getMaterial())));
+                    allowedBlocks.remove(((ItemType) obj).getMaterial());
                 }
             }
         }

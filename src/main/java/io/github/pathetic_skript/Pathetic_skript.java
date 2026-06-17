@@ -30,16 +30,15 @@ public final class Pathetic_skript extends JavaPlugin {
         int pluginId = 32036;
         Metrics metrics = new Metrics(this, pluginId);
 
-        int sync = ExprPathfind.syncPathfinds;
         metrics.addCustomChart(
-                new AdvancedPie("Async/Sync", () -> {
+                new AdvancedPie("syncAsync", () -> {
                     Map<String, Integer> map = new HashMap<>();
                     map.put("Sync", ExprPathfind.syncPathfinds);
                     map.put("Async", EffPathfindStart.asyncPathfinds);
                     return map;
                 }));
         metrics.addCustomChart(
-                new SimplePie("Total Paths", () -> {
+                new SimplePie("totalPaths", () -> {
                     int total = ExprPathfind.syncPathfinds + EffPathfindStart.asyncPathfinds;
                     return String.valueOf(total);
                 })

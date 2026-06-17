@@ -46,7 +46,6 @@ public class ExprMaxConcurrentPathfinds extends SimpleExpression<Integer> {
 
     @Override
     public boolean init(Expression<?>[] expressions, int matchedPattern, Kleenean isDelayed, SkriptParser.ParseResult parseResult) {
-        maxConcurrentPathfinds = 4;
         return true;
     }
 
