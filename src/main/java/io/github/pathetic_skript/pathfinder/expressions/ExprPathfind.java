@@ -55,7 +55,9 @@ public class ExprPathfind extends SimpleExpression<Location> {
         this.loc2 = (Expression<Location>) exprs[1];
         return true;
     }
+    public static int syncPathfinds = 0;
     protected Location[] get(Event event) {
+        syncPathfinds++;
         try {
             // Create the PathfinderFactory
             PathfinderFactory factory = new AStarPathfinderFactory();

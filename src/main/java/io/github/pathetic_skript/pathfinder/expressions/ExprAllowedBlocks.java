@@ -54,8 +54,9 @@ public class ExprAllowedBlocks extends SimpleExpression<Material> {
     }
     @Override
     public void change(Event event, Object [] delta, Changer.ChangeMode mode)  {
+        assert delta != null;
         for (Object obj : delta)  {
-            if (!((ItemType) obj instanceof ItemType)) {
+            if ((ItemType) obj == null) {
                 continue;
             }
             switch (mode)  {

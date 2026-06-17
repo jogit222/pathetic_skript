@@ -18,20 +18,23 @@ import de.bsommerfeld.pathetic.bukkit.provider.LoadingNavigationPointProvider;
 import de.bsommerfeld.pathetic.engine.factory.AStarPathfinderFactory;
 
 import io.github.pathetic_skript.pathfinder.expressions.ExprAllowedBlocks;
+import io.github.pathetic_skript.pathfinder.expressions.ExprPathCacheSize;
+import io.github.pathetic_skript.pathfinder.expressions.ExprMaxConcurrentPathfinds;
 import io.github.pathetic_skript.pathfinder.util.validationProcessor.CustomValidationProcessor;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.event.Event;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.Semaphore;
+import java.util.Collections;
 
 public class EffPathfindStart extends AsyncEffect {
 
-    public static Map<String, Location[]> pathCache = new HashMap<>();
+    public static Map<String, Location[]> pathCache = Collections.synchronizedMap(new LinkedHashMap<>());
+    private static Semaphore pathfindSemaphore;
 
     public static void register(Registration reg) {
         reg.newEffect(EffPathfindStart.class,
@@ -47,27 +50,50 @@ public class EffPathfindStart extends AsyncEffect {
     private Expression<Location> loc1, loc2;
     private Expression<String> id;
 
+    private static int maxPermits = 4;
+
+    public static int asyncPathfinds = 0;
+
     @Override
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         this.loc1 = (Expression<Location>) exprs[0];
         this.loc2 = (Expression<Location>) exprs[1];
-        this.id   = (Expression<String>)   exprs[2];
+        this.id = (Expression<String>) exprs[2];
+
+        int newMax = ExprMaxConcurrentPathfinds.maxConcurrentPathfinds;
+        if (newMax != maxPermits) {
+            int acquired = (pathfindSemaphore != null) ? (maxPermits - pathfindSemaphore.availablePermits()) : 0;
+            pathfindSemaphore = new Semaphore(newMax - acquired);
+            maxPermits = newMax;
+        } else if (pathfindSemaphore == null) {
+            pathfindSemaphore = new Semaphore(newMax);
+            maxPermits = newMax;
+        }
         return true;
     }
 
     @Override
     protected void execute(Event event) {
+        try {
+            pathfindSemaphore.acquire();
+        } catch (InterruptedException e) {
+            Bukkit.getLogger().severe("Unable to acquire Semaphore! Make an issue on the github with following stacktrace" + e.getMessage());
+            e.printStackTrace();
+        }
+        asyncPathfinds++;
         Location startBukkit  = loc1.getSingle(event);
         Location targetBukkit = loc2.getSingle(event);
         World world           = loc1.getSingle(event).getWorld();
         String cacheKey       = id.getSingle(event);
 
+        assert startBukkit != null;
         PathPosition startPos  = new PathPosition(startBukkit.getBlockX(), startBukkit.getBlockY(), startBukkit.getBlockZ());
+        assert targetBukkit != null;
         PathPosition targetPos = new PathPosition(targetBukkit.getBlockX(), targetBukkit.getBlockY(), targetBukkit.getBlockZ());
 
         PathfinderFactory factory = new AStarPathfinderFactory();
         PathfinderConfiguration config;
-        if (ExprAllowedBlocks.allowedBlocks.size() == 0) {
+        if (ExprAllowedBlocks.allowedBlocks.isEmpty()) {
             config = PathfinderConfiguration.builder()
                     .provider(new LoadingNavigationPointProvider())
                     .async(true)
@@ -81,7 +107,7 @@ public class EffPathfindStart extends AsyncEffect {
                     .async(true)
                     .maxIterations(100_000_000)
                     .neighborStrategy(NeighborStrategies.DIAGONAL_3D)
-                    .validationProcessors((ExprAllowedBlocks.allowedBlocks.size() > 0) ? List.of(new CustomValidationProcessor()) : null)
+                    .validationProcessors(List.of(new CustomValidationProcessor()))
                     .build();
         }
         try {
@@ -92,12 +118,13 @@ public class EffPathfindStart extends AsyncEffect {
                         result.getPath().forEach(pos -> nodes.add(BukkitMapper.toLocation(pos, world)));
                         pathCache.put(cacheKey, nodes.toArray(new Location[0]));
                     })
-                    .exceptionally(ex -> {
-                        System.err.println("Pathfinding failed: " + ex.getMessage());
-
-                    });
+                    .exceptionally(ex -> System.err.println("Pathfinding failed: " + ex.getMessage()));
         } catch (Exception ex) {
             System.err.println("Pathfinding interrupted: " + ex.getMessage());
+        }
+        pathfindSemaphore.release();
+        if (pathCache.size() > ExprPathCacheSize.maxPathCacheSize) {
+            pathCache.remove(pathCache.entrySet().iterator().next().getKey());
         }
     }
 

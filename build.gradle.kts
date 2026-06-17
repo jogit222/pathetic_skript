@@ -12,6 +12,7 @@ repositories {
 }
 
 dependencies {
+    implementation("org.bstats:bstats-bukkit:3.2.1")
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     implementation("com.github.bsommerfeld.pathetic-bukkit:core:5.5.0")
     compileOnly("com.github.SkriptLang:Skript:2.15.0")
@@ -42,5 +43,6 @@ tasks {
     shadowJar {
         relocate("com.github.shanebeee.skr", "io.github.pathetic_skript.skr")
         relocate("com.github.bsommerfeld.pathetic-bukkit", "io.github.pathetic_skript.pathetic_bukkit")
+        relocate("org.bstats", "io.github.pathetic_skript.bstats")
     }
 }
