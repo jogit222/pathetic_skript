@@ -14,7 +14,7 @@ repositories {
 dependencies {
     implementation("org.bstats:bstats-bukkit:3.2.1")
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
-    implementation("com.github.bsommerfeld.pathetic-bukkit:core:5.5.0")
+    implementation("com.github.bsommerfeld.pathetic-bukkit:core:5.5.2")
     compileOnly("com.github.SkriptLang:Skript:2.15.0")
     implementation("com.github.ShaneBeee:SkriptRegistration:1.5.0")
 
