@@ -38,9 +38,9 @@ public final class Pathetic_skript extends JavaPlugin {
                     return map;
                 }));
         metrics.addCustomChart(
-                new SimplePie("totalPaths", () -> {
+                new singleLineChart("totalPaths", () -> {
                     int total = ExprPathfind.syncPathfinds + EffPathfindStart.asyncPathfinds;
-                    return String.valueOf(total);
+                    return total;
                 })
         );
 
