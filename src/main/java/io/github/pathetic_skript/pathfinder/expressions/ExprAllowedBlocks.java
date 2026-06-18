@@ -10,6 +10,7 @@ import ch.njol.skript.lang.SkriptParser.ParseResult;
 
 import com.github.shanebeee.skr.Registration;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.material.*;
 import org.bukkit.event.Event;
@@ -48,7 +49,8 @@ public class ExprAllowedBlocks extends SimpleExpression<Material> {
     }
     @Override
     public void change(Event event, Object [] delta, Changer.ChangeMode mode)  {
-        assert delta != null;
+        if (delta != null) {
+            Bukkit.getLogger().warning("You can't add nothing to allowed blocks!");  return;}
         for (Object obj : delta)  {
             if ((ItemType) obj == null) {
                 continue;

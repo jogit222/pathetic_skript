@@ -43,6 +43,7 @@ public class ExprPathfind extends SimpleExpression<Location> {
                 .register();
     }
 
+    private PathfinderFactory pathfinder = new AStarPathfinderFactory();
     private Expression<Location> loc1;
     private Expression<Location> loc2;
     private Location[] array;
@@ -56,8 +57,6 @@ public class ExprPathfind extends SimpleExpression<Location> {
         syncPathfinds++;
         try {
             // Create the PathfinderFactory
-            PathfinderFactory factory = new AStarPathfinderFactory();
-
             // Configure the pathfinder
             PathfinderConfiguration config;
             if (ExprAllowedBlocks.allowedBlocks.isEmpty()) {
@@ -80,7 +79,7 @@ public class ExprPathfind extends SimpleExpression<Location> {
 
             Logger logger = Bukkit.getLogger();
             // Create the pathfinder instance
-            Pathfinder pathfinder = factory.createPathfinder(config);
+            Pathfinder pathfinder = this.pathfinder.createPathfinder(config);
             List<Location> nodes = new ArrayList<>();
             assert this.loc1 != null;
             Location startPosBukkit = this.loc1.getSingle(event);
@@ -94,7 +93,6 @@ public class ExprPathfind extends SimpleExpression<Location> {
                         // We have an usable result since it either found the path, or fallen back.
                         result.getPath().forEach(position -> {
                             Location location = BukkitMapper.toLocation(position, world).add(0.5, 0, 0.5);
-                            // Do something with it.
                             nodes.add(location);
                         });
 

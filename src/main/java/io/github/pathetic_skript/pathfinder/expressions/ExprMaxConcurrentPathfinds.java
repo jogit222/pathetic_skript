@@ -63,8 +63,7 @@ public class ExprMaxConcurrentPathfinds extends SimpleExpression<Integer> {
         try {
             if (mode == Changer.ChangeMode.SET) {
                 int value = (int) delta[0];
-                if (value < 1) value = 1;
-                if (value > 64) value = 64;
+                value = Math.clamp(value, 0, 64);
                 maxConcurrentPathfinds = value;
             }
         } catch(Error e) {
