@@ -52,7 +52,9 @@ public class EffPathfindStart extends AsyncEffect {
 
     private Expression<Location> loc1, loc2;
     private Expression<String> id;
+    PathfinderConfiguration config;
 
+    private PathfinderFactory pathfinder = new AStarPathfinderFactory();
     private static int maxPermits = 4;
 
     public static int asyncPathfinds = 0;
@@ -77,11 +79,13 @@ public class EffPathfindStart extends AsyncEffect {
 
     @Override
     protected void execute(Event event) {
+        boolean semap = true;
         try {
             pathfindSemaphore.acquire();
         } catch (InterruptedException e) {
             Bukkit.getLogger().severe("Unable to acquire Semaphore! Make an issue on the github with following stacktrace" + e.getMessage());
             e.printStackTrace();
+            semap = false;
         }
         asyncPathfinds++;
         Location startBukkit  = loc1.getSingle(event);
@@ -89,13 +93,9 @@ public class EffPathfindStart extends AsyncEffect {
         World world           = loc1.getSingle(event).getWorld();
         String cacheKey       = id.getSingle(event);
 
-        assert startBukkit != null;
-        PathPosition startPos  = new PathPosition(startBukkit.getBlockX(), startBukkit.getBlockY(), startBukkit.getBlockZ());
-        assert targetBukkit != null;
-        PathPosition targetPos = new PathPosition(targetBukkit.getBlockX(), targetBukkit.getBlockY(), targetBukkit.getBlockZ());
+        PathPosition startPos  = BukkitMapper.toPathPosition(startBukkit);
+        PathPosition targetPos = BukkitMapper.toPathPosition(targetBukkit);
 
-        PathfinderFactory factory = new AStarPathfinderFactory();
-        PathfinderConfiguration config;
         if (ExprAllowedBlocks.allowedBlocks.isEmpty()) {
             config = PathfinderConfiguration.builder()
                     .provider(new LoadingNavigationPointProvider())
@@ -125,7 +125,7 @@ public class EffPathfindStart extends AsyncEffect {
         } catch (Exception ex) {
             System.err.println("Pathfinding interrupted: " + ex.getMessage());
         }
-        pathfindSemaphore.release();
+        if (semap) { pathfindSemaphore.release(); }
         if (pathCache.size() > ExprPathCacheSize.maxPathCacheSize) {
             pathCache.remove(pathCache.entrySet().iterator().next().getKey());
         }
