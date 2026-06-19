@@ -14,6 +14,7 @@ import de.bsommerfeld.pathetic.bukkit.context.BukkitEnvironmentContext;
 import de.bsommerfeld.pathetic.bukkit.mapper.BukkitMapper;
 
 import io.github.pathetic_skript.pathfinder.util.CustomNeighborStrategies.CustomNeighborStrategies;
+import io.github.pathetic_skript.pathfinder.util.costProcessor.CustomCostProcessor;
 import io.github.pathetic_skript.pathfinder.util.validationProcessor.CustomValidationProcessor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -64,6 +65,7 @@ public class ExprPathfind extends SimpleExpression<Location> {
                         .provider(new LoadingNavigationPointProvider())
                         .async(false)
                         .maxIterations(100_000_000)
+                        .costProcessor(List.of(new CustomCostProcessor()))
                         .neighborStrategy((ExprNeighborStrategies.neighborMoves.isEmpty()) ? NeighborStrategies.DIAGONAL_3D : new CustomNeighborStrategies())
                         .build();
 
@@ -72,8 +74,9 @@ public class ExprPathfind extends SimpleExpression<Location> {
                         .provider(new LoadingNavigationPointProvider())
                         .async(false)
                         .maxIterations(100_000_000)
+                        .costProcessor(List.of(new CustomCostProcessor()))
                         .neighborStrategy((ExprNeighborStrategies.neighborMoves.isEmpty()) ? NeighborStrategies.DIAGONAL_3D : new CustomNeighborStrategies())
-                        .validationProcessors((ExprAllowedBlocks.allowedBlocks.size() > 0) ? List.of(new CustomValidationProcessor()) : null)
+                        .validationProcessors((!ExprAllowedBlocks.allowedBlocks.isEmpty()) ? List.of(new CustomValidationProcessor()) : null)
                         .build();
             }
 

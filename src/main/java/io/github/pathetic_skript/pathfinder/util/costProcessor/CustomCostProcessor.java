@@ -18,6 +18,9 @@ public class CustomCostProcessor implements CostProcessor {
         EnvironmentContext ec = evaluationContext.getEnvironmentContext();
         World world = ((BukkitEnvironmentContext) ec).getWorld();
         Location location = BukkitMapper.toLocation(evaluationContext.getCurrentPathPosition(), world).add(new Vector(0, -1, 0));
-        return Cost.of(ExprCostContribution.cost.get(location.getBlock()));
+        if (ExprCostContribution.cost.containsKey(location.getBlock().getType())) {
+            return Cost.of(ExprCostContribution.cost.get(location.getBlock().getType()));
+        }
+        return Cost.of(1.0);
     }
 }

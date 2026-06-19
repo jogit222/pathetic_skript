@@ -22,6 +22,7 @@ import io.github.pathetic_skript.pathfinder.expressions.ExprNeighborStrategies;
 import io.github.pathetic_skript.pathfinder.expressions.ExprPathCacheSize;
 import io.github.pathetic_skript.pathfinder.expressions.ExprMaxConcurrentPathfinds;
 import io.github.pathetic_skript.pathfinder.util.CustomNeighborStrategies.CustomNeighborStrategies;
+import io.github.pathetic_skript.pathfinder.util.costProcessor.CustomCostProcessor;
 import io.github.pathetic_skript.pathfinder.util.validationProcessor.CustomValidationProcessor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -36,7 +37,13 @@ import java.util.concurrent.Semaphore;
 
 public class EffPathfindStart extends AsyncEffect {
 
-    public static Map<String, Location[]> pathCache = Collections.synchronizedMap(new LinkedHashMap<>());
+    public static Map<String, Location[]> pathCache = Collections.synchronizedMap(
+            new LinkedHashMap<String, Location[]>() {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, Location[]> eldest) {
+                    return size() > ExprPathCacheSize.maxPathCacheSize;
+                }
+            });
     private static Semaphore pathfindSemaphore;
 
     public static void register(Registration reg) {
@@ -102,6 +109,7 @@ public class EffPathfindStart extends AsyncEffect {
                     .async(true)
                     .maxIterations(100_000_000)
                     .neighborStrategy((ExprNeighborStrategies.neighborMoves.isEmpty()) ? NeighborStrategies.DIAGONAL_3D : new CustomNeighborStrategies())
+                    .costProcessor(List.of(new CustomCostProcessor()))
                     .build();
 
         } else {
@@ -110,6 +118,7 @@ public class EffPathfindStart extends AsyncEffect {
                     .async(true)
                     .maxIterations(100_000_000)
                     .neighborStrategy((ExprNeighborStrategies.neighborMoves.isEmpty()) ? NeighborStrategies.DIAGONAL_3D : new CustomNeighborStrategies())
+                    .costProcessor(List.of(new CustomCostProcessor()))
                     .validationProcessors(List.of(new CustomValidationProcessor()))
                     .build();
         }
@@ -126,9 +135,6 @@ public class EffPathfindStart extends AsyncEffect {
             System.err.println("Pathfinding interrupted: " + ex.getMessage());
         }
         if (semap) { pathfindSemaphore.release(); }
-        if (pathCache.size() > ExprPathCacheSize.maxPathCacheSize) {
-            pathCache.remove(pathCache.entrySet().iterator().next().getKey());
-        }
     }
 
     @Override
