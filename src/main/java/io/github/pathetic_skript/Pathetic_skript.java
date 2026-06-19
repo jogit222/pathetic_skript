@@ -8,6 +8,7 @@ import de.bsommerfeld.pathetic.bukkit.PatheticBukkit;
 
 import org.bstats.charts.AdvancedPie;
 import org.bstats.charts.SimplePie;
+import org.bstats.charts.SingleLineChart;
 import org.bukkit.Material;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -38,9 +39,8 @@ public final class Pathetic_skript extends JavaPlugin {
                     return map;
                 }));
         metrics.addCustomChart(
-                new SimplePie("totalPaths", () -> {
-                    int total = ExprPathfind.syncPathfinds + EffPathfindStart.asyncPathfinds;
-                    return String.valueOf(total);
+                new SingleLineChart("totalPaths", () -> {
+                    return ExprPathfind.syncPathfinds + EffPathfindStart.asyncPathfinds;
                 })
         );
 

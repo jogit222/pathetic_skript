@@ -49,10 +49,11 @@ public class ExprAllowedBlocks extends SimpleExpression<Material> {
     }
     @Override
     public void change(Event event, Object [] delta, Changer.ChangeMode mode)  {
-        if (delta != null) {
-            Bukkit.getLogger().warning("You can't add nothing to allowed blocks!");  return;}
+        if (delta == null) {
+            Bukkit.getLogger().warning("You can't add nothing to allowed blocks!");  return;
+        }
         for (Object obj : delta)  {
-            if ((ItemType) obj == null) {
+            if (obj == null) {
                 continue;
             }
             switch (mode)  {

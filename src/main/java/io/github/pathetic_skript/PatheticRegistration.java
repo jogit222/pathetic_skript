@@ -3,7 +3,6 @@ package io.github.pathetic_skript;
 import com.github.shanebeee.skr.Registration;
 import io.github.pathetic_skript.pathfinder.asyncEffects.EffPathfindStart;
 import io.github.pathetic_skript.pathfinder.expressions.*;
-
 public class PatheticRegistration {
     public static void register(Registration registration) {
         EffPathfindStart.register(registration);
@@ -13,6 +12,7 @@ public class PatheticRegistration {
         ExprPathCacheSize.register(registration);
         ExprMaxConcurrentPathfinds.register(registration);
         ExprNeighborStrategies.register(registration);
+        ExprCostContribution.register(registration);
         registration.finalizeRegistration();
     }
 }
