@@ -1,0 +1,148 @@
+package io.github.patheticSkript.pathfinder.effects;
+
+import ch.njol.skript.lang.Expression;
+import ch.njol.skript.lang.SkriptParser.ParseResult;
+import ch.njol.skript.util.AsyncEffect;
+import ch.njol.util.Kleenean;
+
+import com.github.shanebeee.skr.Registration;
+
+import de.bsommerfeld.pathetic.api.factory.PathfinderFactory;
+import de.bsommerfeld.pathetic.api.pathing.NeighborStrategies;
+import de.bsommerfeld.pathetic.api.pathing.configuration.PathfinderConfiguration;
+import de.bsommerfeld.pathetic.api.wrapper.PathPosition;
+import de.bsommerfeld.pathetic.bukkit.context.BukkitEnvironmentContext;
+import de.bsommerfeld.pathetic.bukkit.mapper.BukkitMapper;
+import de.bsommerfeld.pathetic.bukkit.provider.LoadingNavigationPointProvider;
+import de.bsommerfeld.pathetic.engine.factory.AStarPathfinderFactory;
+
+import io.github.patheticSkript.PatheticSkript;
+import io.github.patheticSkript.pathfinder.expressions.ExprAllowedBlocks;
+import io.github.patheticSkript.pathfinder.expressions.ExprNeighborStrategies;
+import io.github.patheticSkript.pathfinder.expressions.ExprPathCacheSize;
+import io.github.patheticSkript.pathfinder.expressions.ExprMaxConcurrentPathfinds;
+import io.github.patheticSkript.pathfinder.util.CustomNeighborStrategies.CustomNeighborStrategies;
+import io.github.patheticSkript.pathfinder.util.costProcessor.CustomCostProcessor;
+import io.github.patheticSkript.pathfinder.util.validationProcessor.CustomValidationProcessor;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.event.Event;
+import org.bukkit.util.Vector;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Collections;
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.concurrent.Semaphore;
+
+public class EffPathfindStart extends AsyncEffect {
+
+    public static Map<String, Location[]> pathCache = Collections.synchronizedMap(
+            new LinkedHashMap<String, Location[]>() {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, Location[]> eldest) {
+                    return size() > ExprPathCacheSize.maxPathCacheSize;
+                }
+            });
+    private static Semaphore pathfindSemaphore;
+
+    public static void register(Registration reg) {
+        reg.newEffect(EffPathfindStart.class,
+                        "start [calculating] path[finding] from %location% to %location% with id %string%")
+                .name("Pathfinder - Start Async Pathfinder")
+                .description("Start the async pathfinder, use calculated path %string% to retrieve values of this operation. Does NOT block the main server thread")
+                .examples("start pathfinding from location(0, 0, 0) to location(5, 5, 5) with id \"example\"",
+                        "set {_nodes::*} to calculated path \"example\"")
+                .since("1.0.0")
+                .register();
+    }
+
+    private Expression<Location> loc1, loc2;
+    private Expression<String> id;
+    PathfinderConfiguration config;
+
+    private PathfinderFactory pathfinder = new AStarPathfinderFactory();
+    private static int maxPermits = 4;
+    private Instant lastError = Instant.now();
+    public static int asyncPathfinds = 0;
+
+    @Override
+    public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
+        this.loc1 = (Expression<Location>) exprs[0];
+        this.loc2 = (Expression<Location>) exprs[1];
+        this.id = (Expression<String>) exprs[2];
+
+        int newMax = ExprMaxConcurrentPathfinds.maxConcurrentPathfinds;
+        if (newMax != maxPermits) {
+            int acquired = (pathfindSemaphore != null) ? (maxPermits - pathfindSemaphore.availablePermits()) : 0;
+            pathfindSemaphore = new Semaphore(newMax - acquired);
+            maxPermits = newMax;
+        } else if (pathfindSemaphore == null) {
+            pathfindSemaphore = new Semaphore(newMax);
+            maxPermits = newMax;
+        }
+        return true;
+    }
+
+    @Override
+    protected void execute(Event event) {
+        boolean semap = true;
+        try {
+            pathfindSemaphore.acquire();
+        } catch (InterruptedException e) {
+            PatheticSkript.getInstance().getLogger().severe("Unable to acquire Semaphore! Make an issue on the github with following stacktrace" + e.getMessage());
+            PatheticSkript.getInstance().getLogger().severe(Arrays.toString(e.getStackTrace()));
+            semap = false;
+        }
+        asyncPathfinds++;
+        Location startBukkit  = loc1.getSingle(event);
+        Location targetBukkit = loc2.getSingle(event);
+        World world           = loc1.getSingle(event).getWorld();
+        String cacheKey       = id.getSingle(event);
+
+        PathPosition startPos  = BukkitMapper.toPathPosition(startBukkit);
+        PathPosition targetPos = BukkitMapper.toPathPosition(targetBukkit);
+
+        if (ExprAllowedBlocks.allowedBlocks.isEmpty()) {
+            config = PathfinderConfiguration.builder()
+                    .provider(new LoadingNavigationPointProvider())
+                    .async(true)
+                    .maxIterations(100_000_000)
+                    .neighborStrategy((ExprNeighborStrategies.neighborMoves.isEmpty()) ? NeighborStrategies.DIAGONAL_3D : new CustomNeighborStrategies())
+                    .costProcessor(List.of(new CustomCostProcessor()))
+                    .build();
+
+        } else {
+            config = PathfinderConfiguration.builder()
+                    .provider(new LoadingNavigationPointProvider())
+                    .async(true)
+                    .maxIterations(100_000_000)
+                    .neighborStrategy((ExprNeighborStrategies.neighborMoves.isEmpty()) ? NeighborStrategies.DIAGONAL_3D : new CustomNeighborStrategies())
+                    .costProcessor(List.of(new CustomCostProcessor()))
+                    .validationProcessors(List.of(new CustomValidationProcessor()))
+                    .build();
+        }
+        try {
+            pathfinder.createPathfinder(config)
+                    .findPath(startPos, targetPos, new BukkitEnvironmentContext(world))
+                    .ifPresent(result -> {
+                        List<Location> nodes = new ArrayList<>();
+                        result.getPath().forEach(pos -> nodes.add(BukkitMapper.toLocation(pos, world).add(new Vector(0.5, 0, 0.5))));
+                        pathCache.put(cacheKey, nodes.toArray(new Location[0]));
+                    })
+                    .exceptionally(ex -> System.err.println("Pathfinding failed: " + ex.getMessage()));
+        } catch (Exception ex) {
+            if (Duration.between(lastError, Instant.now()).toSeconds() > 15) {
+                System.err.println("Pathfinding interrupted: " + ex.getMessage());
+                lastError = Instant.now();
+            }
+        }
+        if (semap) { pathfindSemaphore.release(); }
+    }
+
+    @Override
+    public String toString(@Nullable Event e, boolean debug) {
+        return "start calculating path from " + loc1.toString(e, debug) + " to " + loc2.toString(e, debug);
+    }
+}

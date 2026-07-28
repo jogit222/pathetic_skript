@@ -1,0 +1,92 @@
+package io.github.patheticSkript.pathfinder.expressions;
+
+import ch.njol.skript.aliases.ItemType;
+import ch.njol.skript.classes.Changer;
+import ch.njol.skript.lang.util.SimpleExpression;
+import ch.njol.skript.lang.Expression;
+import ch.njol.util.Kleenean;
+import ch.njol.skript.lang.SkriptParser.ParseResult;
+
+import com.github.shanebeee.skr.Registration;
+
+import io.github.patheticSkript.PatheticSkript;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.event.Event;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import javax.annotation.Nullable;
+
+import java.time.Instant;
+
+public class ExprAllowedBlocks extends SimpleExpression<Material> {
+    public static void register(Registration reg) {
+        reg.newSimpleExpression(ExprAllowedBlocks.class, Material.class,
+                        "allowed block[s]")
+                .name("Pathfinder - Add/Remove Block For Valid Node")
+                .description("Adds/Removes a block for valid nodes. Default is nothing (so you have to set this else you cant pathfind)")
+                .examples("add stone to allowed blocks")
+                .since("1.0.1")
+                .register();
+    }
+    public static ArrayList<Material> allowedBlocks = new ArrayList<>();
+    @Override
+    public boolean init(Expression<?>[] exprs, int machedPattern, Kleenean isDelayed, ParseResult parseResult)  {
+        return true;
+    }
+
+    private static Instant lastError = Instant.now();
+
+    @Override
+    @Nullable
+    public Class<?> [] acceptChange(Changer.ChangeMode mode)  {
+        return switch (mode) {
+            case ADD, REMOVE -> new Class[]{ItemType[].class};
+            default -> null;
+        };
+    }
+
+
+
+    @Override
+    public Material[] get(Event event) {
+        return allowedBlocks.toArray(new Material[0]);
+    }
+    @Override
+    public void change(Event event, Object [] delta, Changer.ChangeMode mode)  {
+        if (delta == null) {
+            if (Duration.between(lastError, Instant.now()).toSeconds() > 15) {
+                lastError = Instant.now();
+                PatheticSkript.getInstance().getLogger().warning("You can't add nothing to allowed blocks!" + "This message will apear at most once every 15 seconds!");
+                return;
+            }
+        }
+        for (Object obj : delta)  {
+            if (obj == null) {
+                continue;
+            }
+            switch (mode)  {
+                case ADD -> {
+                    allowedBlocks.add(((ItemType) obj).getMaterial());
+                }
+                case REMOVE -> {
+                    allowedBlocks.remove(((ItemType) obj).getMaterial());
+                }
+            }
+        }
+
+    }
+    @Override
+    public boolean isSingle() {
+        return false;
+    }
+    @Override
+    public Class getReturnType() {
+        return Material.class;
+    }
+    @Override
+    public String toString(Event e, boolean b) {
+        return "allowed blocks" + allowedBlocks;
+    }
+}
