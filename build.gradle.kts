@@ -24,6 +24,15 @@ java {
     toolchain.languageVersion = JavaLanguageVersion.of(21)
 }
 
+jar {
+    manifest {
+        attributes(
+            'Implementation-Title': 'Pathetic-Skript',
+            'License': 'GPL-3.0-or-later'
+        )
+    }
+}
+
 tasks {
     runServer {
         // Configure the Minecraft version for our task.
